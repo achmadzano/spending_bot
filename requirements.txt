@@ -3,3 +3,4 @@ langchain
 pymongo
 sambanova
 langchain-sambanova
+plotly
