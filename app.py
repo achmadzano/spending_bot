@@ -1,6 +1,6 @@
 import streamlit as st
-from sambanova_llm import extract_item
-from db import insert_item, get_all_items
+from db import insert_item, get_all_items, delete_item
+from sambanova_llm import extract_item, extract_delete_item
 import plotly.graph_objects as go
 
 st.title("Spending Tracker AI Bot")
@@ -12,12 +12,20 @@ with st.sidebar:
 def handle_submit():
     user_input = st.session_state.get("input_pengeluaran", "")
     if user_input:
-        item = extract_item(user_input)
-        if item:
-            insert_item(item, user)
-            st.success(f"Tersimpan: {item}")
+        if user_input.lower().startswith("hapus"):
+            item = extract_delete_item(user_input)
+            if item:
+                delete_item(item, user)
+                st.success(f"Dihapus: {item}")
+            else:
+                st.error("Gagal ekstrak data dari perintah hapus.")
         else:
-            st.error("Gagal ekstrak data dari input.")
+            item = extract_item(user_input)
+            if item:
+                insert_item(item, user)
+                st.success(f"Tersimpan: {item}")
+            else:
+                st.error("Gagal ekstrak data dari input.")
         st.session_state["input_pengeluaran"] = ""
 
 # Trigger submit jika tombol Kirim ditekan
@@ -43,15 +51,6 @@ items = get_all_items(user)
 if items:
     st.subheader("Daftar Pengeluaran")
     st.table(items)
-    # Grafik batang pengeluaran
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        x=[item['nama'] for item in items],
-        y=[int(item['harga'].replace('.', '')) for item in items],
-        marker_color='indianred',
-        name='Pengeluaran'
-    ))
-    fig.update_layout(title="Grafik Pengeluaran", xaxis_title="Barang", yaxis_title="Harga (Rp)", height=400)
     # Pie chart setengah lingkaran
     pie_fig = go.Figure(go.Pie(
         labels=[item['nama'] for item in items],
@@ -64,12 +63,7 @@ if items:
     pie_fig.update_traces(textinfo='label+percent', pull=[0.05]*len(items), rotation=180)
     pie_fig.update_layout(title="Proporsi Pengeluaran", height=400, margin=dict(t=60, b=0),
                          legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5))
-    # Tampilkan dua grafik berdampingan
-    col_bar, col_pie = st.columns(2)
-    with col_bar:
-        st.plotly_chart(fig, use_container_width=True)
-    with col_pie:
-        st.plotly_chart(pie_fig, use_container_width=True)
+    st.plotly_chart(pie_fig, use_container_width=True)
     total = sum(int(i['harga'].replace('.', '').replace('ribu','000').replace(' ','').replace('Rp','')) for i in items)
     st.write(f"Total: Rp{total:,}")
     max_item = max(items, key=lambda x: int(x['harga'].replace('.', '').replace('ribu','000').replace(' ','').replace('Rp','')))

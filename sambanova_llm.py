@@ -50,3 +50,37 @@ def extract_item(text):
             return None
     print("No JSON found in response.")
     return None
+
+def extract_delete_item(text):
+    prompt = (
+        "Ekstrak nama barang dan harga dari perintah hapus berikut, lalu outputkan dalam format JSON: "
+        '{"nama":..., "harga":...}. '
+        'Harga WAJIB berupa string angka dengan titik sebagai pemisah ribuan, tanpa simbol apapun, misal: "30.000". '
+        'JANGAN gunakan koma, jangan gunakan Rp, dan JANGAN gunakan integer. '
+        f"Input: {text}"
+    )
+    messages = [
+        ("system", "Kamu adalah asisten yang membantu ekstraksi data belanja untuk penghapusan."),
+        ("human", prompt)
+    ]
+    response = llm.invoke(messages)
+    import re
+    match = re.search(r'\{.*\}', response.content)
+    if match:
+        try:
+            import json
+            result = json.loads(match.group(0).replace("'", '"'))
+            harga = result.get("harga", "")
+            if isinstance(harga, int):
+                harga = f"{harga:,}".replace(",", ".")
+            elif isinstance(harga, str):
+                angka = ''.join(filter(str.isdigit, harga))
+                if angka:
+                    harga = f"{int(angka):,}".replace(",", ".")
+            result["harga"] = harga
+            return result
+        except Exception as e:
+            print(f"JSON decode error: {e}")
+            return None
+    print("No JSON found in response.")
+    return None

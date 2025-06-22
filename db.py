@@ -21,3 +21,8 @@ def insert_item(item, user):
 def get_all_items(user):
     col = get_collection(user)
     return list(col.find({}, {'_id': 0}))
+
+def delete_item(item, user):
+    col = get_collection(user)
+    # Hapus satu item yang persis match nama dan harga
+    col.delete_one({"nama": item["nama"], "harga": item["harga"]})
