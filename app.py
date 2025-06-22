@@ -55,7 +55,7 @@ if st.session_state.get("trigger_submit", False):
     handle_submit()
     st.session_state["trigger_submit"] = False
 
-col1, col2 = st.columns([8, 1])
+col1, _ = st.columns([1, 0.01])
 with col1:
     st.text_input(
         "Masukkan pengeluaran (misal: terea 30ribu)",
@@ -64,9 +64,6 @@ with col1:
         label_visibility="collapsed",
         on_change=handle_submit
     )
-with col2:
-    if st.button("Kirim", use_container_width=True):
-        st.session_state["trigger_submit"] = True
 
 items = get_all_items(user)
 

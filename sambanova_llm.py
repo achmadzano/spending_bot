@@ -15,6 +15,10 @@ llm = ChatSambaNovaCloud(
 )
 
 def extract_item(text):
+    # Ubah 'jt' menjadi 'juta' agar lebih jelas sebelum diproses LLM
+    text = text.replace('jt', 'juta').replace('JT', 'juta').replace('Jt', 'juta')
+    # Ganti satuan 'juta' atau 'juta'/'jt' menjadi 'jt' agar output harga konsisten
+    text = text.replace('juta', 'jt').replace('Juta', 'jt').replace('JUTA', 'jt')
     prompt = (
         "Ekstrak nama barang dan harga dari input berikut, lalu outputkan dalam format JSON: "
         '{"nama":..., "harga":...}. '
@@ -52,6 +56,7 @@ def extract_item(text):
     return None
 
 def extract_delete_item(text):
+    text = text.replace('jt', 'juta').replace('JT', 'juta').replace('Jt', 'juta')
     prompt = (
         "Ekstrak nama barang dan harga dari perintah hapus berikut, lalu outputkan dalam format JSON: "
         '{"nama":..., "harga":...}. '
