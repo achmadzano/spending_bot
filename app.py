@@ -7,8 +7,8 @@ st.title("Spending Tracker AI Bot")
 
 # Simple user-password mapping (sebaiknya simpan di env/secret untuk produksi)
 USER_PASSWORDS = {
-    "zano": "zanopass",
-    "juditemi": "judipass"
+    "zano": "temi",
+    "juditemi": "dudul"
 }
 
 def login_form():
