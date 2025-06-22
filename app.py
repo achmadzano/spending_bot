@@ -1,5 +1,5 @@
 import streamlit as st
-from db import insert_item, get_all_items, delete_item
+from db import insert_item, get_all_items, delete_item, get_monthly_recap
 from sambanova_llm import extract_item, extract_delete_item
 import plotly.graph_objects as go
 
@@ -15,13 +15,16 @@ def login_form():
     st.session_state["login_error"] = False
     st.write(":lock: Login untuk akses data")
     username = st.selectbox("User", ["zano", "juditemi"], key="login_user")
-    password = st.text_input("Password", type="password", key="login_pass")
-    if st.button("Login", key="login_btn"):
+    def submit_login():
+        password = st.session_state.get("login_pass", "")
         if USER_PASSWORDS.get(username) == password:
             st.session_state["logged_in"] = True
             st.session_state["user"] = username
         else:
             st.session_state["login_error"] = True
+    st.text_input("Password", type="password", key="login_pass", on_change=submit_login)
+    if st.button("Login", key="login_btn"):
+        submit_login()
     if st.session_state.get("login_error"):
         st.error("Username/password salah!")
 
@@ -66,6 +69,21 @@ with col1:
     )
 
 items = get_all_items(user)
+
+# Tampilkan recap bulanan
+monthly_recap = get_monthly_recap(user)
+if monthly_recap:
+    st.subheader('Rekap Pengeluaran per Bulan')
+    recap_data = []
+    for rec in monthly_recap:
+        year = rec['_id']['year']
+        month = rec['_id']['month']
+        total = rec['total']
+        recap_data.append({
+            'Bulan': f"{month:02d}-{year}",
+            'Total': f"Rp{total:,}"
+        })
+    st.table(recap_data)
 
 if items:
     st.subheader("Daftar Pengeluaran")
