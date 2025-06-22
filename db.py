@@ -1,12 +1,11 @@
 from pymongo import MongoClient
 import os
-import certifi
 
 MONGO_URI = os.environ.get("MONGO_URI", "mongodb+srv://dudul:Zano0911@zano.7nzga4x.mongodb.net/")
 DB_NAME = "spending_bot"
 COLLECTION = "spending"
 
-client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
+client = MongoClient(MONGO_URI)
 db = client[DB_NAME]
 col = db[COLLECTION]
 

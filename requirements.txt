@@ -4,4 +4,3 @@ pymongo
 sambanova
 langchain-sambanova
 plotly
-certifi
