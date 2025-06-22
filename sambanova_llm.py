@@ -87,3 +87,33 @@ def extract_delete_item(text):
             return None
     print("No JSON found in response.")
     return None
+
+def text2num(text):
+    # Mapping sederhana kata ke angka
+    mapping = {
+        'seratus': '100.000',
+        'dua ratus': '200.000',
+        'tiga ratus': '300.000',
+        'empat ratus': '400.000',
+        'lima ratus': '500.000',
+        'enam ratus': '600.000',
+        'tujuh ratus': '700.000',
+        'delapan ratus': '800.000',
+        'sembilan ratus': '900.000',
+        'seribu': '1.000',
+        'dua ribu': '2.000',
+        'tiga ribu': '3.000',
+        'empat ribu': '4.000',
+        'lima ribu': '5.000',
+        'sepuluh ribu': '10.000',
+        'seratus ribu': '100.000',
+        'sejuta': '1.000.000',
+        'dua juta': '2.000.000',
+        'tiga juta': '3.000.000',
+        'empat juta': '4.000.000',
+        'lima juta': '5.000.000',
+        'sepuluh juta': '10.000.000',
+    }
+    for k, v in mapping.items():
+        text = text.replace(k, v)
+    return text
