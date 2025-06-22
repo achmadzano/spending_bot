@@ -13,18 +13,17 @@ USER_PASSWORDS = {
 
 def login_form():
     st.session_state["login_error"] = False
-    with st.sidebar:
-        st.write(":lock: Login untuk akses data")
-        username = st.selectbox("User", ["zano", "juditemi"], key="login_user")
-        password = st.text_input("Password", type="password", key="login_pass")
-        if st.button("Login", key="login_btn"):
-            if USER_PASSWORDS.get(username) == password:
-                st.session_state["logged_in"] = True
-                st.session_state["user"] = username
-            else:
-                st.session_state["login_error"] = True
+    st.write(":lock: Login untuk akses data")
+    username = st.selectbox("User", ["zano", "juditemi"], key="login_user")
+    password = st.text_input("Password", type="password", key="login_pass")
+    if st.button("Login", key="login_btn"):
+        if USER_PASSWORDS.get(username) == password:
+            st.session_state["logged_in"] = True
+            st.session_state["user"] = username
+        else:
+            st.session_state["login_error"] = True
     if st.session_state.get("login_error"):
-        st.sidebar.error("Username/password salah!")
+        st.error("Username/password salah!")
 
 # Cek login
 if not st.session_state.get("logged_in"):
