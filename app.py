@@ -5,9 +5,32 @@ import plotly.graph_objects as go
 
 st.title("Spending Tracker AI Bot")
 
-with st.sidebar:
-    user = st.radio("Pilih user:", ["zano", "juditemi"], horizontal=True)
-    st.write(f"Mode: User {user}")
+# Simple user-password mapping (sebaiknya simpan di env/secret untuk produksi)
+USER_PASSWORDS = {
+    "zano": "zanopass",
+    "juditemi": "judipass"
+}
+
+def login_form():
+    st.session_state["login_error"] = False
+    with st.sidebar:
+        st.write(":lock: Login untuk akses data")
+        username = st.selectbox("User", ["zano", "juditemi"], key="login_user")
+        password = st.text_input("Password", type="password", key="login_pass")
+        if st.button("Login", key="login_btn"):
+            if USER_PASSWORDS.get(username) == password:
+                st.session_state["logged_in"] = True
+                st.session_state["user"] = username
+            else:
+                st.session_state["login_error"] = True
+    if st.session_state.get("login_error"):
+        st.sidebar.error("Username/password salah!")
+
+# Cek login
+if not st.session_state.get("logged_in"):
+    login_form()
+    st.stop()
+user = st.session_state["user"]
 
 def handle_submit():
     user_input = st.session_state.get("input_pengeluaran", "")
