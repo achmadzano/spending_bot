@@ -1,14 +1,20 @@
 import streamlit as st
-from db import insert_item, get_all_items, delete_item, get_monthly_recap
+from db import insert_item, get_all_items, delete_item, get_monthly_recap, get_target_bulan_ini, set_target_bulan_ini
 from sambanova_llm import extract_item, extract_delete_item
 import plotly.graph_objects as go
+from datetime import datetime
+import pytz
+
+def get_jakarta_now():
+    return datetime.utcnow().replace(tzinfo=pytz.utc).astimezone(pytz.timezone('Asia/Jakarta'))
 
 st.title("Spending Tracker AI Bot")
 
 # Simple user-password mapping (sebaiknya simpan di env/secret untuk produksi)
 USER_PASSWORDS = {
     "zano": "temi",
-    "juditemi": "dudul"
+    "juditemi": "dudul",
+    "emir":"mili"
 }
 
 def login_form():
@@ -84,6 +90,33 @@ if monthly_recap:
             'Total': f"Rp{total:,}"
         })
     st.table(recap_data)
+
+# === FITUR TARGET BULANAN ===
+now = get_jakarta_now()
+bulan_ini = now.month
+tahun_ini = now.year
+bulan_ini_recap = next((rec for rec in monthly_recap if rec['_id']['year']==tahun_ini and rec['_id']['month']==bulan_ini), None)
+total_bulan_ini = bulan_ini_recap['total'] if bulan_ini_recap else 0
+
+def_target = 2000000  # default 2 juta
+# Ambil target dari database
+init_target = get_target_bulan_ini(user, tahun_ini, bulan_ini)
+if init_target is None:
+    init_target = def_target
+
+st.subheader('Target/Budget Pengeluaran Bulan Ini')
+target = st.number_input('Masukkan target pengeluaran bulan ini (Rp)', min_value=0, value=init_target, step=100000, format='%d', key='target_bulan_ini_input')
+# Simpan ke database jika berubah
+if target != init_target:
+    set_target_bulan_ini(user, tahun_ini, bulan_ini, target)
+
+progress = min(total_bulan_ini/target, 1.0) if target > 0 else 0
+st.progress(progress, text=f"{total_bulan_ini:,} / {target:,}")
+if target > 0:
+    if total_bulan_ini >= target:
+        st.error('Pengeluaran bulan ini sudah melebihi target!')
+    elif total_bulan_ini >= 0.8*target:
+        st.warning('Pengeluaran bulan ini sudah >80% dari target!')
 
 if items:
     st.subheader("Daftar Pengeluaran")

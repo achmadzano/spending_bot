@@ -43,3 +43,16 @@ def get_monthly_recap(user):
         {"$sort": {"_id.year": -1, "_id.month": -1}}
     ]
     return list(col.aggregate(pipeline))
+
+def get_target_bulan_ini(user, tahun, bulan):
+    target_col = db["spending_target"]
+    doc = target_col.find_one({"user": user, "tahun": tahun, "bulan": bulan})
+    return doc["target"] if doc else None
+
+def set_target_bulan_ini(user, tahun, bulan, target):
+    target_col = db["spending_target"]
+    target_col.update_one(
+        {"user": user, "tahun": tahun, "bulan": bulan},
+        {"$set": {"target": target}},
+        upsert=True
+    )
