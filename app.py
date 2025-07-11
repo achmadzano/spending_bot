@@ -14,13 +14,13 @@ st.title("Spending Tracker AI Bot")
 USER_PASSWORDS = {
     "zano": "temi",
     "juditemi": "dudul",
-    "emir":"mili"
+    "emir": "mili"
 }
 
 def login_form():
     st.session_state["login_error"] = False
     st.write(":lock: Login untuk akses data")
-    username = st.selectbox("User", ["zano", "juditemi"], key="login_user")
+    username = st.selectbox("User", ["zano", "juditemi", "emir"], key="login_user")
     def submit_login():
         password = st.session_state.get("login_pass", "")
         if USER_PASSWORDS.get(username) == password:
