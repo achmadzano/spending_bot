@@ -1,5 +1,5 @@
 import streamlit as st
-from db import insert_item, get_all_items, delete_item, get_monthly_recap, get_target_bulan_ini, set_target_bulan_ini
+from db import insert_item, get_all_items, delete_item, get_monthly_recap, get_target_bulan_ini, set_target_bulan_ini, register_user, authenticate_user
 from sambanova_llm import extract_item, extract_delete_item
 import plotly.graph_objects as go
 from datetime import datetime
@@ -10,29 +10,38 @@ def get_jakarta_now():
 
 st.title("Spending Tracker AI Bot")
 
-# Simple user-password mapping (sebaiknya simpan di env/secret untuk produksi)
-USER_PASSWORDS = {
-    "zano": "temi",
-    "juditemi": "dudul",
-    "emir": "emir"
-}
-
 def login_form():
     st.session_state["login_error"] = False
+    st.session_state["register_error"] = False
     st.write(":lock: Login untuk akses data")
-    username = st.selectbox("User", ["zano", "juditemi", "emir"], key="login_user")
-    def submit_login():
-        password = st.session_state.get("login_pass", "")
-        if USER_PASSWORDS.get(username) == password:
-            st.session_state["logged_in"] = True
-            st.session_state["user"] = username
-        else:
-            st.session_state["login_error"] = True
-    st.text_input("Password", type="password", key="login_pass", on_change=submit_login)
-    if st.button("Login", key="login_btn"):
-        submit_login()
-    if st.session_state.get("login_error"):
-        st.error("Username/password salah!")
+    tab_login, tab_register = st.tabs(["Login", "Register"])
+
+    with tab_login:
+        username = st.text_input("Username", key="login_user")
+        password = st.text_input("Password", type="password", key="login_pass", on_change=None)
+        def submit_login():
+            if authenticate_user(username, password):
+                st.session_state["logged_in"] = True
+                st.session_state["user"] = username
+            else:
+                st.session_state["login_error"] = True
+        if st.button("Login") or (password and st.session_state.get("login_pass") and st.session_state.get("login_user")):
+            submit_login()
+        if st.session_state.get("login_error"):
+            st.error("Username/password salah!")
+
+    with tab_register:
+        new_username = st.text_input("Username baru", key="register_user")
+        new_password = st.text_input("Password baru", type="password", key="register_pass", on_change=None)
+        def submit_register():
+            if register_user(new_username, new_password):
+                st.success("Registrasi berhasil! Silakan login.")
+            else:
+                st.session_state["register_error"] = True
+        if st.button("Register") or (new_password and st.session_state.get("register_user") and st.session_state.get("register_pass")):
+            submit_register()
+        if st.session_state.get("register_error"):
+            st.error("Username sudah digunakan.")
 
 # Cek login
 if not st.session_state.get("logged_in"):
@@ -92,31 +101,32 @@ if monthly_recap:
     st.table(recap_data)
 
 # === FITUR TARGET BULANAN ===
-now = get_jakarta_now()
-bulan_ini = now.month
-tahun_ini = now.year
-bulan_ini_recap = next((rec for rec in monthly_recap if rec['_id']['year']==tahun_ini and rec['_id']['month']==bulan_ini), None)
-total_bulan_ini = bulan_ini_recap['total'] if bulan_ini_recap else 0
+# (Fitur target bulanan di-nonaktifkan sementara)
+# now = get_jakarta_now()
+# bulan_ini = now.month
+# tahun_ini = now.year
+# bulan_ini_recap = next((rec for rec in monthly_recap if rec['_id']['year']==tahun_ini and rec['_id']['month']==bulan_ini), None)
+# total_bulan_ini = bulan_ini_recap['total'] if bulan_ini_recap else 0
 
-def_target = 2000000  # default 2 juta
-# Ambil target dari database
-init_target = get_target_bulan_ini(user, tahun_ini, bulan_ini)
-if init_target is None:
-    init_target = def_target
+# def_target = 2000000  # default 2 juta
+# # Ambil target dari database
+# init_target = get_target_bulan_ini(user, tahun_ini, bulan_ini)
+# if init_target is None:
+#     init_target = def_target
 
-st.subheader('Target/Budget Pengeluaran Bulan Ini')
-target = st.number_input('Masukkan target pengeluaran bulan ini (Rp)', min_value=0, value=init_target, step=100000, format='%d', key='target_bulan_ini_input')
-# Simpan ke database jika berubah
-if target != init_target:
-    set_target_bulan_ini(user, tahun_ini, bulan_ini, target)
+# st.subheader('Target/Budget Pengeluaran Bulan Ini')
+# target = st.number_input('Masukkan target pengeluaran bulan ini (Rp)', min_value=0, value=init_target, step=100000, format='%d', key='target_bulan_ini_input')
+# # Simpan ke database jika berubah
+# if target != init_target:
+#     set_target_bulan_ini(user, tahun_ini, bulan_ini, target)
 
-progress = min(total_bulan_ini/target, 1.0) if target > 0 else 0
-st.progress(progress, text=f"{total_bulan_ini:,} / {target:,}")
-if target > 0:
-    if total_bulan_ini >= target:
-        st.error('Pengeluaran bulan ini sudah melebihi target!')
-    elif total_bulan_ini >= 0.8*target:
-        st.warning('Pengeluaran bulan ini sudah >80% dari target!')
+# progress = min(total_bulan_ini/target, 1.0) if target > 0 else 0
+# st.progress(progress, text=f"{total_bulan_ini:,} / {target:,}")
+# if target > 0:
+#     if total_bulan_ini >= target:
+#         st.error('Pengeluaran bulan ini sudah melebihi target!')
+#     elif total_bulan_ini >= 0.8*target:
+#         st.warning('Pengeluaran bulan ini sudah >80% dari target!')
 
 if items:
     st.subheader("Daftar Pengeluaran")
@@ -142,3 +152,5 @@ if items:
     st.write(f"Termurah: {min_item['nama']} ({min_item['harga']})")
 else:
     st.info("Belum ada data pengeluaran.")
+
+st.sidebar.button("Logout", on_click=lambda: st.session_state.clear())

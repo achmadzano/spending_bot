@@ -12,9 +12,8 @@ db = client[DB_NAME]
 col = db[COLLECTION]
 
 def get_collection(user):
-    if user == "juditemi":
-        return db["spending_juditemi"]
-    return db["spending_zano"]
+    # Setiap user punya collection sendiri, nama: spending_<username>
+    return db[f"spending_{user}"]
 
 def insert_item(item, user):
     col = get_collection(user)
@@ -56,3 +55,15 @@ def set_target_bulan_ini(user, tahun, bulan, target):
         {"$set": {"target": target}},
         upsert=True
     )
+
+def register_user(username, password):
+    user_col = db["users"]
+    if user_col.find_one({"username": username}):
+        return False  # Username sudah ada
+    user_col.insert_one({"username": username, "password": password})
+    return True
+
+def authenticate_user(username, password):
+    user_col = db["users"]
+    user = user_col.find_one({"username": username, "password": password})
+    return user is not None
