@@ -14,7 +14,7 @@ st.title("Spending Tracker AI Bot")
 USER_PASSWORDS = {
     "zano": "temi",
     "juditemi": "dudul",
-    "emir": "mili"
+    "emir": "emir"
 }
 
 def login_form():
